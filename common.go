@@ -1,6 +1,10 @@
 package sms
 
 import (
+	"crypto/hmac"
+	"crypto/sha1"
+	"encoding/base64"
+	"net/url"
 	"reflect"
 	"strings"
 )
@@ -12,6 +16,11 @@ var DefaultCommonRequest = map[string]string{
 	"Version":          "2017-05-25",
 }
 
+// Request 请求类接口
+type Request interface {
+	ToString(secret string) string
+}
+
 // Response 返回参数
 type Response struct {
 	RequestID string `json:"RequestId"`
@@ -19,8 +28,8 @@ type Response struct {
 	Message   string `json:"Message"`
 }
 
-// Request 请求参数接口
-type Request struct {
+// CommonRequest 请求参数接口
+type CommonRequest struct {
 	AccessKeyID      string `json:"AccessKeyId"`
 	SignatureMethod  string `json:"SignatureMethod"`
 	SignatureVersion string `json:"SignatureVersion"`
@@ -31,24 +40,21 @@ type Request struct {
 	Action           string `json:"Action"` // 每个接口对应的Action
 }
 
-// SpecialURLEncode 返回特殊URL编码处理后的值
-func (req *Request) SpecialURLEncode(value string) string {
-	return ""
-}
-
-// Sign 返回签名值
-func (req *Request) Sign(accessSecret string, encodeStr string) string {
-	return ""
-}
-
 // ToString 返回拼接字符串
-func (req *Request) ToString() string {
-	return ""
+func (req *CommonRequest) ToString(secret string) string {
+	v := structToValues(req)
+	sortedQueryString := specialURLEncode(v.Encode())
+	stringToSign := "GET&%2F&" + url.QueryEscape(sortedQueryString) // 注意再次urlencode
+	sign := sign(secret+"&", stringToSign)
+	v.Set("Signature", sign)
+	q := specialURLEncode(v.Encode())
+	return q
 }
 
-// StructToMap struct转map
-func StructToMap(i interface{}) map[string]interface{} {
-	values := make(map[string]interface{})
+// structToValues struct转url.Values
+func structToValues(i interface{}) url.Values {
+	// values := make(map[string]interface{})
+	v := url.Values{}
 	if i != nil {
 		iVal := reflect.ValueOf(i).Elem()
 		tp := iVal.Type()
@@ -57,10 +63,26 @@ func StructToMap(i interface{}) map[string]interface{} {
 			if len(tag) > 0 {
 				name := strings.Split(tag, ",")[0]
 				if name != "-" {
-					values[name] = iVal.Field(i).Interface()
+					v.Set(name, iVal.Field(i).String())
 				}
 			}
 		}
 	}
-	return values
+	return v
+}
+
+// specialURLEncode 返回特殊URL编码处理后的值
+func specialURLEncode(value string) string {
+	value = strings.Replace(value, "+", "%20", -1)
+	value = strings.Replace(value, "*", "%2A", -1)
+	value = strings.Replace(value, "%7E", "~", -1)
+	return value
+}
+
+// sign 返回签名值
+func sign(accessSecret string, encodeStr string) string {
+	hash := hmac.New(sha1.New, []byte(accessSecret))
+	hash.Write([]byte(encodeStr))
+	hstring := base64.StdEncoding.EncodeToString(hash.Sum(nil))
+	return hstring
 }

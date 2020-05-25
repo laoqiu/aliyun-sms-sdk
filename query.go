@@ -2,7 +2,7 @@ package sms
 
 // QuerySendDetailsRequest 查看短信发送记录和发送状态请求参数
 type QuerySendDetailsRequest struct {
-	Request
+	CommonRequest
 	CurrentPage int    `json:"CurrentPage"`
 	PageSize    int    `json:"PageSize"`
 	PhoneNumber string `json:"PhoneNumber"`

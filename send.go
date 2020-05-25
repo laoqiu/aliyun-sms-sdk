@@ -1,8 +1,14 @@
 package sms
 
+import (
+	"encoding/json"
+
+	"github.com/golang/glog"
+)
+
 // SendRequest 发送短信请求参数
 type SendRequest struct {
-	Request
+	CommonRequest
 	PhoneNumbers    string `json:"PhoneNumbers"`
 	SignName        string `json:"SignName"`
 	TemplateCode    string `json:"TemplateCode"`
@@ -13,7 +19,7 @@ type SendRequest struct {
 
 // SendBatchRequest 批量发送短信请求参数
 type SendBatchRequest struct {
-	Request
+	CommonRequest
 	PhoneNumberJSON     string `json:"PhoneNumberJson"`
 	SignNameJSON        string `json:"SignNameJson"`
 	TemplateCode        string `json:"TemplateCode"`
@@ -31,11 +37,29 @@ type SendResponse struct {
 func (s *Sms) Send(req *SendRequest) (*SendResponse, error) {
 	// req.Sign()
 	req.Action = "SendSms"
-	return nil, nil
+	body, err := s.Fetch(req)
+	if err != nil {
+		return nil, err
+	}
+	glog.Info(body)
+	res := &SendResponse{}
+	if err := json.Unmarshal(body, res); err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 // SendBatch 批量发送短信
 func (s *Sms) SendBatch(req *SendBatchRequest) (*SendResponse, error) {
 	req.Action = "SendBatchSms"
-	return nil, nil
+	body, err := s.Fetch(req)
+	if err != nil {
+		return nil, err
+	}
+	glog.Info(body)
+	res := &SendResponse{}
+	if err := json.Unmarshal(body, res); err != nil {
+		return nil, err
+	}
+	return res, nil
 }
