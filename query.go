@@ -34,5 +34,9 @@ type SmsSendDetailDTOs struct {
 // QuerySendDetails 查看短信发送记录和发送状态
 func (s *Sms) QuerySendDetails(req *QuerySendDetailsRequest) (*QuerySendDetailsResponse, error) {
 	req.Action = "QuerySendDetails"
-	return nil, nil
+	resp := &QuerySendDetailsResponse{}
+	if err := s.Fetch(req, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
 }

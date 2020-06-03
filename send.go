@@ -1,11 +1,5 @@
 package sms
 
-import (
-	"encoding/json"
-
-	"github.com/golang/glog"
-)
-
 // SendRequest 发送短信请求参数
 type SendRequest struct {
 	CommonRequest
@@ -37,29 +31,19 @@ type SendResponse struct {
 func (s *Sms) Send(req *SendRequest) (*SendResponse, error) {
 	// req.Sign()
 	req.Action = "SendSms"
-	body, err := s.Fetch(req)
-	if err != nil {
+	resp := &SendResponse{}
+	if err := s.Fetch(req, resp); err != nil {
 		return nil, err
 	}
-	glog.Info(body)
-	res := &SendResponse{}
-	if err := json.Unmarshal(body, res); err != nil {
-		return nil, err
-	}
-	return res, nil
+	return resp, nil
 }
 
 // SendBatch 批量发送短信
 func (s *Sms) SendBatch(req *SendBatchRequest) (*SendResponse, error) {
 	req.Action = "SendBatchSms"
-	body, err := s.Fetch(req)
-	if err != nil {
+	resp := &SendResponse{}
+	if err := s.Fetch(req, resp); err != nil {
 		return nil, err
 	}
-	glog.Info(body)
-	res := &SendResponse{}
-	if err := json.Unmarshal(body, res); err != nil {
-		return nil, err
-	}
-	return res, nil
+	return resp, nil
 }

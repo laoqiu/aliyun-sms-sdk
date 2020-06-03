@@ -1,12 +1,14 @@
 package sms
 
 import (
+	"crypto/tls"
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
 )
 
 // DefaultEndpoint 短信服务地址
-var DefaultEndpoint = "dysmsapi.aliyuncs.com"
+var DefaultEndpoint = "https://dysmsapi.aliyuncs.com"
 
 // Sms 短信服务
 type Sms struct {
@@ -24,17 +26,24 @@ func NewSms(key string) *Sms {
 }
 
 // Fetch 发送请求
-func (s *Sms) Fetch(req Request) ([]byte, error) {
+func (s *Sms) Fetch(req Request, resp interface{}) error {
 	q := req.ToString(s.accessSecret)
-	// 发送http请求
-	res, err := http.Get("http://dysmsapi.aliyuncs.com/?" + q)
+	// client不验证https证书
+	c := http.Client{Transport: &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}}
+	// 发送请求
+	res, err := c.Get(DefaultEndpoint + "/?" + q)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	body, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return body, nil
+	if err := json.Unmarshal(body, resp); err != nil {
+		return err
+	}
+	return nil
 }
