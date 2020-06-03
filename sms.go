@@ -25,6 +25,11 @@ func NewSms(key string) *Sms {
 	}
 }
 
+// SetEndpoint 设置新的短信服务地址
+func (s *Sms) SetEndpoint(endpoint string) {
+	s.endpoint = endpoint
+}
+
 // Fetch 发送请求
 func (s *Sms) Fetch(req Request, resp interface{}) error {
 	q := req.ToString(s.accessSecret)
