@@ -32,13 +32,13 @@ func (s *Sms) SetEndpoint(endpoint string) {
 
 // Fetch 发送请求
 func (s *Sms) Fetch(req Request, resp interface{}) error {
-	q := req.ToString(s.accessSecret)
+	q := ToString(req, s.accessSecret)
 	// client不验证https证书
 	c := http.Client{Transport: &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}}
 	// 发送请求
-	res, err := c.Get(DefaultEndpoint + "/?" + q)
+	res, err := c.Get(s.endpoint + "/?" + q)
 	if err != nil {
 		return err
 	}

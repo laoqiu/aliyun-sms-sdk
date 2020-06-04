@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/base64"
+	"encoding/json"
 	"net/url"
 	"reflect"
 	"strings"
@@ -18,7 +19,7 @@ var DefaultCommonRequest = map[string]string{
 
 // Request 请求类接口
 type Request interface {
-	ToString(secret string) string
+	ActionName() string
 }
 
 // Response 返回参数
@@ -40,8 +41,17 @@ type CommonRequest struct {
 	Action           string `json:"Action"` // 每个接口对应的Action
 }
 
+func (req *CommonRequest) ActionName() string {
+	return req.Action
+}
+
+func (req *CommonRequest) SetDefaultParam() error {
+	b, _ := json.Marshal(DefaultCommonRequest)
+	return json.Unmarshal(b, req)
+}
+
 // ToString 返回拼接字符串
-func (req *CommonRequest) ToString(secret string) string {
+func ToString(req Request, secret string) string {
 	v := structToValues(req)
 	sortedQueryString := specialURLEncode(v.Encode())
 	stringToSign := "GET&%2F&" + url.QueryEscape(sortedQueryString) // 注意再次urlencode
