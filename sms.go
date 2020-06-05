@@ -43,7 +43,7 @@ func (s *Sms) Fetch(req Request, resp interface{}) error {
 		return err
 	}
 	body, err := ioutil.ReadAll(res.Body)
-	res.Body.Close()
+	defer res.Body.Close()
 	if err != nil {
 		return err
 	}
